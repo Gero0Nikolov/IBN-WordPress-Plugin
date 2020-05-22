@@ -1,0 +1,60 @@
+.ibn-container {
+  display: block;
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px 20px; }
+  .ibn-container.no-wrap {
+    border: none;
+    padding: 0; }
+    .ibn-container.no-wrap .ibn-row-container {
+      margin-bottom: 6px;
+      padding-bottom: 6px; }
+      .ibn-container.no-wrap .ibn-row-container .label-right {
+        margin-left: 5px;
+        margin-right: 0; }
+  .ibn-container .ibn-row-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd; }
+    .ibn-container .ibn-row-container.wrap {
+      flex-wrap: wrap; }
+    .ibn-container .ibn-row-container:last-of-type {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none; }
+    .ibn-container .ibn-row-container.right {
+      justify-content: flex-end; }
+    .ibn-container .ibn-row-container label,
+    .ibn-container .ibn-row-container .ibn-picked-post {
+      margin-right: 5px; }
+    .ibn-container .ibn-row-container input {
+      margin: 0; }
+    .ibn-container .ibn-row-container input[type="text"] {
+      width: 50%; }
+    .ibn-container .ibn-row-container .button {
+      margin: 0; }
+    .ibn-container .ibn-row-container .ibn-selected-post {
+      font-weight: 700; }
+    .ibn-container .ibn-row-container .ibn-hidden-on-start {
+      opacity: 0; }
+    .ibn-container .ibn-row-container .ibn-expiration-setup-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      width: 100%;
+      margin-top: 6px; }
+      .ibn-container .ibn-row-container .ibn-expiration-setup-container.hidden {
+        display: none; }
+      .ibn-container .ibn-row-container .ibn-expiration-setup-container .ibn-separator {
+        display: inline-block;
+        margin: 0 5px; }
+
+/*# sourceMappingURL=admin.css.map */

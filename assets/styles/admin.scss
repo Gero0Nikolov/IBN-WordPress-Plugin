@@ -1,0 +1,96 @@
+// Default Colors
+$container_background: #fff;
+$border_color: #ddd;
+
+// Stylings
+.ibn-container {
+    display: block;
+    position: relative;
+    background: $container_background;
+    border: 1px solid $border_color;
+    padding: 10px 20px;
+
+    &.no-wrap {
+        border: none;
+        padding: 0;
+
+        .ibn-row-container {
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+
+            .label-right {
+                margin-left: 5px;
+                margin-right: 0;
+            }
+        }
+    }
+
+    .ibn-row-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        position: relative;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid $border_color;
+
+        &.wrap {
+            flex-wrap: wrap;
+        }
+
+        &:last-of-type { 
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        &.right {
+            justify-content: flex-end;
+        }
+
+        label,
+        .ibn-picked-post {
+            margin-right: 5px;
+        }
+
+        input {
+            margin: 0;
+        }
+
+        input[type="text"] {
+            width: 50%;
+        }
+
+        .button {
+            margin: 0;
+        }
+
+        .ibn-selected-post {
+            font-weight: 700;
+        }
+
+        .ibn-hidden-on-start {
+            opacity: 0;
+        }
+
+        .ibn-expiration-setup-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            width: 100%;
+            margin-top: 6px;
+
+            &.hidden {
+                display: none;
+            }
+
+            .ibn-separator {
+                display: inline-block;
+                margin: 0 5px;
+            }
+        }
+    }
+}
