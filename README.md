@@ -34,14 +34,14 @@ Once you choose which will be your first **Breaking News** post in its Edit scre
 There you'll find the following three options:
 1) **Make this post breaking news**: Once checked it'll pin your post and overwrite previously pinned posts. Sadly at version 1.0 you can have only one pinned post at a time.
 2) **Custom breaking news title**: This setting allows you to choose a specific title for your post, which will be presented only in the Breaking News banner.
-3) **Set an expiration Date & Time**: This option allows you to choose when the pinned post to dissapear from your website automatically.
+3) **Set an expiration Date & Time**: This option allows you to choose when the pinned post to disappear from your website automatically.
 
 There is something that you should remember about the **Expiring Pins functionality**.
 **Instant Breaking News** plugin automatically takes your server time and converts it to your WordPress Timezone.
-That is **extremelly important to remember** when setting the expiration date & time of your post, because if you pick a time which has already passed at your WordPress Timezone that post will be automatically unpinned in order to protect you from pinning expired posts. However if that happens **don't worry**! Once you set the new date and time you'll be able to re-pin it again, just by checking the **Make this post breaking news** option again.
+That is **extremely important to remember** when setting the expiration date & time of your post, because if you pick a time which has already passed at your WordPress Timezone that post will be automatically unpinned in order to protect you from pinning expired posts. However if that happens **don't worry**! Once you set the new date and time you'll be able to re-pin it again, just by checking the **Make this post breaking news** option again.
 
 ### Note:
-This plugin will work with almost every standart WordPress theme which has **<header>** in it's structure. If your themplate has unique structure, the plugin will need a bit of tweeking in order to run properly. The change that'll be required is at the **/assets/scripts/public.js** file.
+This plugin will work with almost every standart WordPress theme which has **<header>** in it's structure. If your template has unique structure, the plugin will need a bit of tweeking in order to run properly. The change that'll be required is at the **/assets/scripts/public.js** file.
 You'll have to specify where on your website you would like to attach the **Breaking News** banner through those two lines:
 ```javascript
 let $firstHeader = jQuery( "header" ).first();
