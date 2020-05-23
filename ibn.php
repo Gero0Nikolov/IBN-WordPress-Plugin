@@ -12,13 +12,17 @@ class IBN {
     private
     $_ASSETS_VERSION,
     $_DEFAULT_BACKGROUND_COLOR,
-    $_DEFAULT_TEXT_COLOR;
+    $_DEFAULT_TEXT_COLOR,
+    $_IS_ADMIN;
 
     function __construct() {
         // Init Plugin Defaults
         $this->_ASSETS_VERSION = "1.0";
         $this->_DEFAULT_BACKGROUND_COLOR = "#dd9933";
         $this->_DEFAULT_TEXT_COLOR = "#ffffff";
+
+        // Check User Possibilities
+        add_action( "admin_init", array( $this, "ibn_is_admin" ) );
 
         // Register Menu Page
         add_action( "admin_menu", array( $this, "ibn_dashboard_controller" ) );
@@ -46,6 +50,11 @@ class IBN {
     }
 
     function __destruct() {}
+
+    // Check User Possibilities Method
+    function ibn_is_admin() {
+        $this->_IS_ADMIN = current_user_can( "administrator" );
+    }
 
     // Menu Page Methods
     function ibn_dashboard_controller() {
@@ -82,7 +91,10 @@ class IBN {
     function ibn_save_settings() {
         $response = false;
 
-        if ( is_user_logged_in() ) {
+        if ( 
+            is_user_logged_in() &&
+            $this->_IS_ADMIN
+        ) {
             $settings = isset( $_POST[ "settings" ] ) && !empty( $_POST[ "settings" ] ) ? (object)$_POST[ "settings" ] : false;
             if ( $settings !== false ) {
                 if ( !empty( $settings->title ) ) {
@@ -175,7 +187,10 @@ class IBN {
     function ibn_pin_post() {
         $response = false;
 
-        if ( is_user_logged_in() ) {
+        if ( 
+            is_user_logged_in() &&
+            $this->_IS_ADMIN
+        ) {
             $post_id = isset( $_POST[ "post_id" ] ) && !empty( $_POST[ "post_id" ] ) ? intval( $_POST[ "post_id" ] ) : 0;
             $pin_type = isset( $_POST[ "pin_type" ] ) && !empty( $_POST[ "pin_type" ] ) ? $_POST[ "pin_type" ] : false;
             $post_status = get_post_status( $post_id );
@@ -217,26 +232,24 @@ class IBN {
 
         $post_id = intval( $post_id );
 
-        if ( is_user_logged_in() ) {
-            if ( $post_id > 0 ) {
-                // Get Current Pinned Post
-                $current_pinned_post = get_option( "ibn_pinned_post_id", false );
+        if ( $post_id > 0 ) {
+            // Get Current Pinned Post
+            $current_pinned_post = get_option( "ibn_pinned_post_id", false );
 
-                // Prepare the Post Info Object
-                $result = new stdClass;
-                $result->success = true;
-                $result->breaking_title = get_post_meta( $post_id, "ibn_breaking_title", true );
-                $result->expiration_date = $this->ibn_parse_expiration_date( get_post_meta( $post_id, "ibn_expiration_date", true ) );
+            // Prepare the Post Info Object
+            $result = new stdClass;
+            $result->success = true;
+            $result->breaking_title = get_post_meta( $post_id, "ibn_breaking_title", true );
+            $result->expiration_date = $this->ibn_parse_expiration_date( get_post_meta( $post_id, "ibn_expiration_date", true ) );
 
-                if ( $result->expiration_date == false ) {
-                    $result->is_pinned = $current_pinned_post == $post_id ? true : false;
-                } else {
-                    $today_date_serial = $this->ibn_convert_to_wp_time( "Y-m-d H:i" );
-                    $result->is_pinned = $current_pinned_post == $post_id && $result->expiration_date->serial > $today_date_serial ? true : false;
-                }
+            if ( $result->expiration_date == false ) {
+                $result->is_pinned = $current_pinned_post == $post_id ? true : false;
             } else {
-                $result = "ERROR: Invalid Post ID.";
+                $today_date_serial = $this->ibn_convert_to_wp_time( "Y-m-d H:i" );
+                $result->is_pinned = $current_pinned_post == $post_id && $result->expiration_date->serial > $today_date_serial ? true : false;
             }
+        } else {
+            $result = "ERROR: Invalid Post ID.";
         }
         
         return $result;
@@ -266,6 +279,7 @@ class IBN {
     function ibn_save_post( $post ) {
         if ( 
             is_user_logged_in() &&
+            $this->_IS_ADMIN &&
             isset( $_POST[ "ID" ] ) &&
             !empty( $_POST[ "ID" ] )
         ) {
