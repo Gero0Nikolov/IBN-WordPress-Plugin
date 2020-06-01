@@ -337,19 +337,15 @@ class IBN {
             $settings = $this->ibn_get_settings();
 
             if ( $settings->pinned_post->id > 0 ) {
-            ?>
-                <script type="text/javascript">
-                var ibnBreakingNews = {
-                    title: "<?php echo $settings->title; ?>",
-                    backgroundColor: "<?php echo $settings->background_color; ?>",
-                    textColor: "<?php echo $settings->text_color; ?>",
-                    post: {
-                        url: "<?php echo $settings->pinned_post->public_url; ?>",
-                        title: "<?php echo $settings->pinned_post->title; ?>"
-                    }
-                };
-                </script>
-            <?php
+                wp_localize_script( "ibn-public-js", "ibnBreakingNews", array( 
+                    "title" => $settings->title,
+                    "backgroundColor" => $settings->background_color,
+                    "textColor" => $settings->text_color,
+                    "post" => array(
+                        "url" => $settings->pinned_post->public_url,
+                        "title" => $settings->pinned_post->title
+                    )
+                ) );
             }
         }
     }
