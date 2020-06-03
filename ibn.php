@@ -192,7 +192,7 @@ class IBN {
             $this->_IS_ADMIN
         ) {
             $post_id = isset( $_POST[ "post_id" ] ) && !empty( $_POST[ "post_id" ] ) ? intval( $_POST[ "post_id" ] ) : 0;
-            $pin_type = isset( $_POST[ "pin_type" ] ) && !empty( $_POST[ "pin_type" ] ) ? $_POST[ "pin_type" ] : false;
+            $pin_type = isset( $_POST[ "pin_type" ] ) && !empty( $_POST[ "pin_type" ] ) ? sanitize_text_field( $_POST[ "pin_type" ] ) : false;
             $post_status = get_post_status( $post_id );
             
             $response = "Post ID is invalid!";
@@ -277,14 +277,13 @@ class IBN {
 
     // Register Save Post Method
     function ibn_save_post( $post ) {
+        $post_id = intval( $_POST[ "ID" ] );
+
         if ( 
             is_user_logged_in() &&
             $this->_IS_ADMIN &&
-            isset( $_POST[ "ID" ] ) &&
-            !empty( $_POST[ "ID" ] )
+            $post_id > 0
         ) {
-            $post_id = $_POST[ "ID" ];
-
             // Set Breaking Title Meta
             $set_breaking_title = update_post_meta( $post_id, "ibn_breaking_title", sanitize_text_field( $_POST[ "ibn-pin-post-title" ] ) );
 
@@ -294,14 +293,21 @@ class IBN {
                 !empty( $_POST[ "ibn-pin-post-expiration" ] ) &&
                 $_POST[ "ibn-pin-post-expiration" ] == "on"
             ) {
+                $date_object = new stdClass;
+                $date_object->year = intval( $_POST[ "ibn-expiration-year" ] );
+                $date_object->month = intval( $_POST[ "ibn-expiration-month" ] );
+                $date_object->day = intval( $_POST[ "ibn-expiration-day" ] );
+                $date_object->hour = intval( $_POST[ "ibn-expiration-hour" ] );
+                $date_object->minute = intval( $_POST[ "ibn-expiration-minute" ] );
+
                 if (
-                    !empty( $_POST[ "ibn-expiration-year" ] ) &&
-                    !empty( $_POST[ "ibn-expiration-month" ] ) &&
-                    !empty( $_POST[ "ibn-expiration-day" ] )  &&
-                    !empty( $_POST[ "ibn-expiration-hour" ] ) &&
-                    !empty( $_POST[ "ibn-expiration-minute" ] )
+                    $date_object->year > 0 &&
+                    $date_object->month > 0 &&
+                    $date_object->day > 0  &&
+                    $date_object->hour > 0 &&
+                    $date_object->minute > 0
                 ) {
-                    $date = $_POST[ "ibn-expiration-year" ] ."-". $_POST[ "ibn-expiration-month" ] ."-". $_POST[ "ibn-expiration-day" ] ." ". $_POST[ "ibn-expiration-hour" ] .":". $_POST[ "ibn-expiration-minute" ];
+                    $date = $date_object->year ."-". $date_object->month ."-". $date_object->day ." ". $date_object->hour .":". $date_object->minute;
                     $date_serial = strtotime( $date );
 
                     // Check if date is valid
