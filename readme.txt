@@ -15,7 +15,7 @@ This plugin will allow you to pin posts and feature them as "Breaking News" at t
 Instant Breaking News or IBN,<br>
 will allow you to pin posts and feature them as "Breaking News" at the header of your website.<br>
 <br>
-For a longer documentation check the Plugin GitHub repository <a href="http://plugins.svn.wordpress.org/instant-breaking-news/" target="_blank">here</a>.
+For a longer documentation check the Plugin GitHub repository <a href="https://github.com/Gero0Nikolov/IBN-WordPress-Plugin" target="_blank">here</a>.
 
 <strong>How it works ?</strong>
 <br>
@@ -41,7 +41,7 @@ That is extremely important to remember when setting the expiration date & time 
 
 <strong>Note:</strong>
 <br>
-This plugin will work with almost every standart WordPress theme which has in it's structure.<br>
+This plugin will work with almost every standart WordPress theme.<br>
 If your template has unique structure, the plugin will need a bit of tweeking in order to run properly.<br>
 The change that'll be required is at the /assets/scripts/public.js file.<br>
 You'll have to specify where on your website you would like to attach the Breaking News banner through those two lines:<br>
