@@ -41,7 +41,7 @@ There is something that you should remember about the **Expiring Pins functional
 That is **extremely important to remember** when setting the expiration date & time of your post, because if you pick a time which has already passed at your WordPress Timezone that post will be automatically unpinned in order to protect you from pinning expired posts. However if that happens **don't worry**! Once you set the new date and time you'll be able to re-pin it again, just by checking the **Make this post breaking news** option again.
 
 ### Note:
-This plugin will work with almost every standart WordPress theme which has **<header>** in it's structure. If your template has unique structure, the plugin will need a bit of tweeking in order to run properly. The change that'll be required is at the **/assets/scripts/public.js** file.
+This plugin will work with almost every standart WordPress theme. If your template has unique structure, the plugin will need a bit of tweeking in order to run properly. The change that'll be required is at the **/assets/scripts/public.js** file.
 You'll have to specify where on your website you would like to attach the **Breaking News** banner through those two lines:
 ```javascript
 let $firstHeader = jQuery( "header" ).first();
