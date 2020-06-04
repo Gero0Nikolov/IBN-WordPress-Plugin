@@ -13,7 +13,9 @@ This plugin will allow you to pin posts and feature them as "Breaking News" at t
 == Description ==
 
 Instant Breaking News or IBN,<br>
-will allow you to pin posts and feature them as "Breaking News" at the header of your website.
+will allow you to pin posts and feature them as "Breaking News" at the header of your website.<br>
+<br>
+For a longer documentation check the Plugin GitHub repository <a href="http://plugins.svn.wordpress.org/instant-breaking-news/" target="_blank">here</a>.
 
 <strong>How it works ?</strong>
 <br>
