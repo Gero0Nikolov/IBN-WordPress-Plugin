@@ -49,3 +49,7 @@ jQuery( container ).insertAfter( $firstHeader );
 ```
 
 ##### That's it, let's start pinning!
+
+### Log:
+**1.1** - Update tested version of WP Core to 6.0.2
+**1.0** - Release
