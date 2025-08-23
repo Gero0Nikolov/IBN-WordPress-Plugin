@@ -61,7 +61,7 @@ class IBN {
         register_setting( 'ibn_settings_group', 'ibn_settings', [ 'sanitize_callback' => [ $this, 'ibn_sanitize_settings' ] ] );
     }
 
-    private function ibn_sanitize_settings( $settings ) {
+    function ibn_sanitize_settings( $settings ) {
         $allowed = [ 'title', 'background_color', 'text_color' ];
         if ( ! is_array( $settings ) ) {
             return new WP_Error( 'invalid_settings', __( 'Invalid settings provided.', 'textdomain' ) );
