@@ -65,7 +65,8 @@ function ibnSaveSettings() {
             type: "POST",
             data: {
                 action: "ibn_save_settings",
-                settings: settings
+                settings: settings,
+                _wpnonce: ibnDefaults.nonce
             },
             success: function( response ) {
                 if ( typeof response !== "undefined" ) {
@@ -133,7 +134,8 @@ function ibnPinPost() {
             data: {
                 action: "ibn_pin_post",
                 post_id: postID,
-                pin_type: pinType
+                pin_type: pinType,
+                _wpnonce: ibnDefaults.pinNonce
             },
             success: function( response ) {
                 if ( typeof response !== "undefined" ) {

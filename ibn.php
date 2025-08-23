@@ -2,7 +2,7 @@
 /*
 *	Plugin name: Instant Breaking News
 *	Description: This plugin will provide the possibility to feature a Post as a "Breaking News"
-*	Version: 1.0
+*	Version: 1.0.1
 *	Author: GeroNikolov
 *	Author URI: https://geronikolov.com
 *	License: PS (CS)
@@ -23,6 +23,7 @@ class IBN {
 
         // Check User Possibilities
         add_action( "admin_init", array( $this, "ibn_is_admin" ) );
+        add_action( "admin_init", array( $this, "ibn_register_settings" ) );
 
         // Register Menu Page
         add_action( "admin_menu", array( $this, "ibn_dashboard_controller" ) );
@@ -56,6 +57,43 @@ class IBN {
         $this->_IS_ADMIN = current_user_can( "administrator" );
     }
 
+    function ibn_register_settings() {
+        register_setting( 'ibn_settings_group', 'ibn_settings', [ 'sanitize_callback' => [ $this, 'ibn_sanitize_settings' ] ] );
+    }
+
+    function ibn_sanitize_settings( $settings ) {
+        $allowed = [ 'title', 'background_color', 'text_color' ];
+        if ( ! is_array( $settings ) ) {
+            return new WP_Error( 'invalid_settings', __( 'Invalid settings provided.', 'textdomain' ) );
+        }
+
+        $sanitized = [];
+        foreach ( $allowed as $key ) {
+            if ( isset( $settings[ $key ] ) ) {
+                switch ( $key ) {
+                    case 'title':
+                        $title = trim( sanitize_text_field( $settings[ $key ] ) );
+                        $title = mb_substr( $title, 0, 120 );
+                        if ( '' === $title ) {
+                            return new WP_Error( 'invalid_title', __( 'Banner Title is required.', 'textdomain' ) );
+                        }
+                        $sanitized[ $key ] = $title;
+                        break;
+                    case 'background_color':
+                        $color = sanitize_hex_color( $settings[ $key ] );
+                        $sanitized[ $key ] = $color ? $color : $this->_DEFAULT_BACKGROUND_COLOR;
+                        break;
+                    case 'text_color':
+                        $color = sanitize_hex_color( $settings[ $key ] );
+                        $sanitized[ $key ] = $color ? $color : $this->_DEFAULT_TEXT_COLOR;
+                        break;
+                }
+            }
+        }
+
+        return $sanitized;
+    }
+
     // Menu Page Methods
     function ibn_dashboard_controller() {
         add_menu_page( __( "Breaking News", "textdomain" ), __( "Breaking News", "textdomain" ), "administrator", "ibn-dashboard-controller", array( $this, "ibn_dashboard_builder" ), "dashicons-megaphone", NULL );
@@ -78,71 +116,89 @@ class IBN {
         $gmt_offset = get_option( "gmt_offset" );
 
         // Prepare Defaults
-        wp_localize_script( "ibn-admin-js", "ibnDefaults", array( 
+        wp_localize_script( "ibn-admin-js", "ibnDefaults", array(
             "ajax_url" => admin_url( "admin-ajax.php" ),
             "loadingText" => __( "Loading...", "textdomain" ),
             "saveText" => __( "Save", "textdomain" ),
             "gmtString" => "GMT". ( $gmt_offset >= 0 ? "+". $gmt_offset : $gmt_offset ),
-            "gmtOffset" => $gmt_offset
-        ) );        
+            "gmtOffset" => $gmt_offset,
+            "nonce" => wp_create_nonce( 'ibn_settings' ),
+            "pinNonce" => wp_create_nonce( 'ibn_pin_post' )
+        ) );
     }
 
     // Save Settings Method
     function ibn_save_settings() {
-        $response = false;
-
-        if ( 
-            is_user_logged_in() &&
-            $this->_IS_ADMIN
-        ) {
-            $settings = isset( $_POST[ "settings" ] ) && !empty( $_POST[ "settings" ] ) ? (object)$_POST[ "settings" ] : false;
-            if ( $settings !== false ) {
-                if ( !empty( $settings->title ) ) {
-                    // Check if Background Color is set or not, in case it's not set the default one
-                    $settings->background_color = !empty( $settings->background_color ) ? $settings->background_color : $this->_DEFAULT_BACKGROUND_COLOR;
-
-                    // Check if Text Color is set or not, in case it's not set the default one
-                    $settings->text_color = !empty( $settings->text_color ) ? $settings->text_color : $this->_DEFAULT_TEXT_COLOR;
-
-                    // Sanitize Breaking News Title
-                    $settings->title = sanitize_text_field( $settings->title );
-
-                    // Save the settings into WP Options
-                    $title_update = update_option( "ibn_title", $settings->title, false );
-                    $background_color_update = update_option( "ibn_background_color", $settings->background_color, false );
-                    $text_color_update = update_option( "ibn_text_color", $settings->text_color, false );
-
-                    // Set successful response
-                    $response = __( "Settings are saved successfully!", "textdomain" );
-                } else {
-                    $response = __( "Banner Title is required!", "textdomain" );
-                }
-            }
+        if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+            wp_send_json_error( __( 'Invalid request method.', 'textdomain' ), 400 );
         }
 
-        echo json_encode( $response );
-        die( "" );
+        check_ajax_referer( 'ibn_settings', '_wpnonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Insufficient permissions.', 'textdomain' ), 403 );
+        }
+
+        $referer = wp_get_referer();
+        if ( ! $referer || parse_url( $referer, PHP_URL_HOST ) !== parse_url( home_url(), PHP_URL_HOST ) ) {
+            wp_send_json_error( __( 'Invalid referer.', 'textdomain' ), 403 );
+        }
+
+        $raw_settings = isset( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : [];
+        if ( ! is_array( $raw_settings ) ) {
+            wp_send_json_error( __( 'Invalid settings provided.', 'textdomain' ), 400 );
+        }
+
+        $unknown = array_diff( array_keys( $raw_settings ), [ 'title', 'background_color', 'text_color' ] );
+        if ( ! empty( $unknown ) ) {
+            wp_send_json_error( __( 'Invalid settings provided.', 'textdomain' ), 400 );
+        }
+
+        $sanitized = $this->ibn_sanitize_settings( $raw_settings );
+        if ( is_wp_error( $sanitized ) ) {
+            wp_send_json_error( $sanitized->get_error_message(), 400 );
+        }
+
+        update_option( 'ibn_settings', $sanitized, false );
+
+        wp_send_json_success( __( 'Settings are saved successfully!', 'textdomain' ) );
     }
 
     // Get Saved Settings Method
     function ibn_get_settings() {
+        $defaults = [
+            'title' => '',
+            'background_color' => $this->_DEFAULT_BACKGROUND_COLOR,
+            'text_color' => $this->_DEFAULT_TEXT_COLOR,
+        ];
+
+        $options = get_option( 'ibn_settings', [] );
+        if ( empty( $options ) ) {
+            $options = [
+                'title' => get_option( 'ibn_title', '' ),
+                'background_color' => get_option( 'ibn_background_color', $this->_DEFAULT_BACKGROUND_COLOR ),
+                'text_color' => get_option( 'ibn_text_color', $this->_DEFAULT_TEXT_COLOR ),
+            ];
+        }
+
+        $options = wp_parse_args( $options, $defaults );
+
         $result = new stdClass;
-        $result->title = get_option( "ibn_title", "" );
-        $result->background_color = get_option( "ibn_background_color", $this->_DEFAULT_BACKGROUND_COLOR );
-        $result->text_color = get_option( "ibn_text_color", $this->_DEFAULT_TEXT_COLOR );
+        $result->title = sanitize_text_field( $options['title'] );
+        $result->background_color = sanitize_hex_color( $options['background_color'] );
+        $result->text_color = sanitize_hex_color( $options['text_color'] );
         $result->pinned_post = new stdClass;
-        $result->pinned_post->id = get_option( "ibn_pinned_post_id", 0 );
-        
+        $result->pinned_post->id = get_option( 'ibn_pinned_post_id', 0 );
+
         // Collect the pinned post data if needed
         if ( $result->pinned_post->id != 0 ) {
-            // Check if the pinned post has expiration time and it's still valid
-            $pinned_post_expiration_time = get_post_meta( $result->pinned_post->id, "ibn_expiration_date", true );
-            $today_date_serial = $this->ibn_convert_to_wp_time( "Y-m-d H:i" );
+            $pinned_post_expiration_time = get_post_meta( $result->pinned_post->id, 'ibn_expiration_date', true );
+            $today_date_serial = $this->ibn_convert_to_wp_time( 'Y-m-d H:i' );
 
-            if ( 
+            if (
                 (
                     $pinned_post_expiration_time != false &&
-                    !empty( $pinned_post_expiration_time ) &&
+                    ! empty( $pinned_post_expiration_time ) &&
                     $pinned_post_expiration_time > $today_date_serial
                 ) || (
                     $pinned_post_expiration_time == false ||
@@ -151,11 +207,10 @@ class IBN {
             ) {
                 $result->pinned_post->edit_url = is_user_logged_in() ? get_edit_post_link( $result->pinned_post->id ) : false;
                 $result->pinned_post->public_url = get_permalink( $result->pinned_post->id );
-                $result->pinned_post->title = get_post_meta( $result->pinned_post->id, "ibn_breaking_title", true );
+                $result->pinned_post->title = sanitize_text_field( get_post_meta( $result->pinned_post->id, 'ibn_breaking_title', true ) );
 
-                // If there isn't specific Breaking News Title use the Post Title
-                if ( !$result->pinned_post->title ) {
-                    $result->pinned_post->title = get_the_title( $result->pinned_post->id );
+                if ( ! $result->pinned_post->title ) {
+                    $result->pinned_post->title = sanitize_text_field( get_the_title( $result->pinned_post->id ) );
                 }
             } else {
                 $result->pinned_post->id = 0;
@@ -185,45 +240,42 @@ class IBN {
 
     // Register Pin Post Method
     function ibn_pin_post() {
-        $response = false;
-
-        if ( 
-            is_user_logged_in() &&
-            $this->_IS_ADMIN
-        ) {
-            $post_id = isset( $_POST[ "post_id" ] ) && !empty( $_POST[ "post_id" ] ) ? intval( $_POST[ "post_id" ] ) : 0;
-            $pin_type = isset( $_POST[ "pin_type" ] ) && !empty( $_POST[ "pin_type" ] ) ? sanitize_text_field( $_POST[ "pin_type" ] ) : false;
-            $post_status = get_post_status( $post_id );
-            
-            $response = "Post ID is invalid!";
-
-            if ( 
-                $post_status == "publish" &&
-                $post_id > 0 &&
-                (
-                    $pin_type == "true" || 
-                    $pin_type == "false"
-                )
-            ) {
-                $current_pinned_post = get_option( "ibn_pinned_post_id", false );
-
-                if ( 
-                    $current_pinned_post == $post_id &&
-                    $pin_type == "false"
-                ) { // Remove Pinned Post
-                    $update_pinned_post_id = update_option( "ibn_pinned_post_id", 0, false );
-                    $response = "unpinned";
-                } else {
-                    $update_pinned_post_id = update_option( "ibn_pinned_post_id", $post_id, false );
-                    $response = "pinned";
-                }
-            } elseif ( $post_status != "publish" ) {
-                $response = "Publish the Post before using it as a Breaking News!";
-            }
+        if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
+            wp_send_json_error( __( 'Invalid request method.', 'textdomain' ), 400 );
         }
 
-        echo json_encode( $response );
-        die( "" );
+        check_ajax_referer( 'ibn_pin_post', '_wpnonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'Insufficient permissions.', 'textdomain' ), 403 );
+        }
+
+        $referer = wp_get_referer();
+        if ( ! $referer || parse_url( $referer, PHP_URL_HOST ) !== parse_url( home_url(), PHP_URL_HOST ) ) {
+            wp_send_json_error( __( 'Invalid referer.', 'textdomain' ), 403 );
+        }
+
+        $post_id = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
+        $pin_type = isset( $_POST['pin_type'] ) ? filter_var( wp_unslash( $_POST['pin_type'] ), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE ) : null;
+
+        if ( 0 === $post_id || is_null( $pin_type ) ) {
+            wp_send_json_error( __( 'Invalid data.', 'textdomain' ), 400 );
+        }
+
+        $post_status = get_post_status( $post_id );
+        if ( 'publish' !== $post_status ) {
+            wp_send_json_error( __( 'Publish the Post before using it as a Breaking News!', 'textdomain' ), 400 );
+        }
+
+        $current_pinned_post = get_option( 'ibn_pinned_post_id', 0 );
+
+        if ( $current_pinned_post === $post_id && false === $pin_type ) {
+            update_option( 'ibn_pinned_post_id', 0, false );
+            wp_send_json_success( 'unpinned' );
+        }
+
+        update_option( 'ibn_pinned_post_id', $post_id, false );
+        wp_send_json_success( 'pinned' );
     }
 
     // Get Post Info Method
@@ -343,15 +395,15 @@ class IBN {
             $settings = $this->ibn_get_settings();
 
             if ( $settings->pinned_post->id > 0 ) {
-                wp_localize_script( "ibn-public-js", "ibnBreakingNews", array( 
-                    "title" => $settings->title,
-                    "backgroundColor" => $settings->background_color,
-                    "textColor" => $settings->text_color,
-                    "post" => array(
-                        "url" => $settings->pinned_post->public_url,
-                        "title" => $settings->pinned_post->title
-                    )
-                ) );
+                wp_localize_script( 'ibn-public-js', 'ibnBreakingNews', [
+                    'title' => $settings->title,
+                    'backgroundColor' => $settings->background_color,
+                    'textColor' => $settings->text_color,
+                    'post' => [
+                        'url' => esc_url( $settings->pinned_post->public_url ),
+                        'title' => $settings->pinned_post->title,
+                    ],
+                ] );
             }
         }
     }
