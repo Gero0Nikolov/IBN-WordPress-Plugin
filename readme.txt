@@ -4,7 +4,7 @@ Donate link: https://geronikolov.com/
 Tags: Open Source, Breaking News, Universal
 Requires at least: 3.0.1
 Tested up to: 6.0.2
-Stable tag: 1.1
+Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -56,6 +56,7 @@ jQuery( container ).insertAfter( $firstHeader );
 <br>
 <strong>Log:</strong>
 <ul>
+    <li>1.0.1 - Fix: CSRF and XSS in settings; nonce and capability checks; sanitization and escaping hardening.</li>
     <li>1.1 - Update tested version of WP Core to 6.0.2</li>
     <li>1.0 - Release</li>
 </ul>
