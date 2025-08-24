@@ -3,7 +3,7 @@ Contributors: GeroNikolov
 Donate link: https://geronikolov.com/
 Tags: Open Source, Breaking News, Universal
 Requires at least: 3.0.1
-Tested up to: 6.0.2
+Tested up to: 6.8.2
 Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
